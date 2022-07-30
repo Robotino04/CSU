@@ -68,7 +68,7 @@ uint64_t positionTokens(std::vector<Token>& tokens){
             }
         }
         else{
-            index++;
+            consumeType(getToken().type);
         }
     }
 
