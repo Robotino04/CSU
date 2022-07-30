@@ -32,6 +32,10 @@ struct Token{
     SourceInformation sourceInfo;
     uint64_t binaryPos = 0;
     uint64_t binarySize = 0;
+
+    bool operator == (Token const& other){
+        return type == other.type && lexeme == other.lexeme;
+    }
 };
 
 namespace std{

@@ -55,6 +55,7 @@ int main(int argc, const char** argv){
     auto tokens = expandTokens(tokenise(source, inFilename));
 
     uint64_t binarySize = positionTokens(tokens);
+    resolveLabels(tokens);
 
     std::cout << "-------------| Tokens |-------------\n";
     for (auto const& tok : tokens){
@@ -64,6 +65,6 @@ int main(int argc, const char** argv){
     std::cout << reconstructSource(tokens);
     
     std::cout << "-------------| Binary |-------------\n";
-    std::cout << "Binary is " << binarySize << " bytes large.\n";
+    std::cout << "The binary is " << binarySize << " bytes large.\n";
     return 0;
 }
