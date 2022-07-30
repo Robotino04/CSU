@@ -52,7 +52,7 @@ int main(int argc, const char** argv){
     std::stringstream buffer;
     buffer << infile.rdbuf();
     std::string source = buffer.str();
-    auto tokens = tokenise(source, inFilename);
+    auto tokens = expandTokens(tokenise(source, inFilename));
 
     std::cout << "-------------| Tokens |-------------\n";
     for (auto const& tok : tokens){

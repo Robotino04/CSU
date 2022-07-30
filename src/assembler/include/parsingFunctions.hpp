@@ -22,5 +22,6 @@ inline std::string generateUniqueLabel()
 }
 
 std::vector<Token> tokenise(std::string source, std::string filename);
+std::vector<Token> expandTokens(std::vector<Token> const& tokens);
 
 std::string reconstructSource(std::vector<Token> const &tokens);
