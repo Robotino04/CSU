@@ -1,7 +1,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "CSU/CSU.hpp"
+#include "CSU.hpp"
 
 int main(){
     CSU csu(std::pow(2, 4));
