@@ -54,11 +54,16 @@ int main(int argc, const char** argv){
     std::string source = buffer.str();
     auto tokens = expandTokens(tokenise(source, inFilename));
 
+    uint64_t binarySize = positionTokens(tokens);
+
     std::cout << "-------------| Tokens |-------------\n";
     for (auto const& tok : tokens){
         std::cout << std::to_string(tok) << "\n";
     }
     std::cout << "------| Reconstructed Source |------\n";
     std::cout << reconstructSource(tokens);
+    
+    std::cout << "-------------| Binary |-------------\n";
+    std::cout << "Binary is " << binarySize << " bytes large.\n";
     return 0;
 }
