@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <bit>
 
 #include "Token.hpp"
 #include "parsingFunctions.hpp"
@@ -49,11 +50,15 @@ int main(int argc, const char** argv){
     std::string inFilename = argv[argc-1];
 
     std::ifstream infile(inFilename);
+    if (!infile.is_open()){
+        std::cout << "Error opening input file!\n";
+        return 1;
+    }
+
     std::stringstream buffer;
     buffer << infile.rdbuf();
     std::string source = buffer.str();
     auto tokens = expandTokens(tokenise(source, inFilename));
-
     uint64_t binarySize = positionTokens(tokens);
     resolveLabels(tokens);
 
@@ -61,10 +66,31 @@ int main(int argc, const char** argv){
     for (auto const& tok : tokens){
         std::cout << std::to_string(tok) << "\n";
     }
+
     std::cout << "------| Reconstructed Source |------\n";
     std::cout << reconstructSource(tokens);
     
+    auto binary = generateBinary(tokens, binarySize);
+    
+
     std::cout << "-------------| Binary |-------------\n";
-    std::cout << "The binary is " << binarySize << " bytes large.\n";
+    std::cout << "The binary is " << binary.size() * sizeof(uint64_t) << " bytes large.\n";
+    if (binary.size() * sizeof(uint64_t) != binarySize){
+        std::cout << "The estemated size was " << binarySize << "bytes.";
+    }
+
+    if constexpr (std::endian::native != std::endian::little){
+        // swap the endianness
+        for (auto& x : binary){
+            x = std::byteswap(x);
+        }
+    }
+    std::ofstream outfile(outFilename, std::ios::binary);
+    if (!outfile.is_open()){
+        std::cout << "Error opening output file!\n";
+        return 1;
+    }
+    outfile.write(reinterpret_cast<char*>(binary.data()), sizeof(uint64_t) * binary.size() / sizeof(char));
+
     return 0;
 }

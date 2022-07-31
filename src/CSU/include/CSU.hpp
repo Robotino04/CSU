@@ -12,7 +12,7 @@ class CSU{
 
         void printState(uint64_t size = 16);
 
-        void setMemoryRegion(uint64_t start, std::vector<uint64_t> newValues);
+        void setMemoryRegion(uint64_t start, std::vector<int64_t> newValues);
     
     private:
         std::vector<int64_t> memory;

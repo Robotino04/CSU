@@ -46,7 +46,7 @@ void CSU::printState(uint64_t size){
 }
 
 
-void CSU::setMemoryRegion(uint64_t start, std::vector<uint64_t> newValues){
+void CSU::setMemoryRegion(uint64_t start, std::vector<int64_t> newValues){
     if (start + newValues.size() >= memory.size())
         throw std::out_of_range("Invalid memory region");
 

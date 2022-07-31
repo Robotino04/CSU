@@ -13,7 +13,9 @@ void resolveLabels(std::vector<Token>& tokens){
             }
             while ((targetLabel+1)->type != TokenType::Colon);
 
-            tokens.at(i) = Token(TokenType::Address, "$" + std::to_string(targetLabel->binaryPos));
+            tokens.at(i).type = TokenType::Address;
+            tokens.at(i).lexeme = "$" + std::to_string(targetLabel->binaryPos);
+            tokens.at(i).data = (uint64_t)targetLabel->binaryPos;
         }
     }
 }

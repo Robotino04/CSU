@@ -101,7 +101,7 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 }
                 bool failed = false;
                 try{
-                    token.data = std::stoi(token.lexeme, nullptr, base);
+                    token.data = (int64_t)std::stoi(token.lexeme, nullptr, base);
                 }
                 catch(std::invalid_argument){
                     failed = true;
@@ -118,6 +118,7 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 if (isAddress){
                     token.lexeme.insert(token.lexeme.begin(), '$');
                     token.type = TokenType::Address;
+                    token.data = (uint64_t)std::any_cast<int64_t>(token.data);
                 }
 
                 break;
