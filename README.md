@@ -11,6 +11,7 @@ The custom assembler for the CSU is divided into five stages:
 4. label resolution: replacing labels by their corresponding address
 5. binary generation: converting the tokens into the final binary
 
+The final binary is stored as little endian uint64_ts.
 
 ## Resources
 - [https://en.wikipedia.org/wiki/One-instruction_set_computer#Subtract_and_branch_if_less_than_or_equal_to_zero]()

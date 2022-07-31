@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 
 project(CSU)
+SET(CMAKE_CXX_STANDARD 23)
 
 file(GLOB_RECURSE CSU_SOURCE "src/CSU/*.cpp" "src/CSU/*.hpp")
 file(GLOB_RECURSE EMULATOR_SOURCE "src/emulator/*.cpp" "src/emulator/*.hpp")
