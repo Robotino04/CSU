@@ -2,7 +2,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <bit>
 
 #include "Token.hpp"
 #include "parsingFunctions.hpp"
@@ -16,11 +15,13 @@ void printHelp(const char* argv0){
 
 int main(int argc, const char** argv){
     // hardcode the arguments for easier debuging
+    #ifndef NDEBUG
     argc = 2;
     const char* argv0 = argv[0];
     argv = new const char*[2];
     argv[0] = argv0;
     argv[1] = "test.s";
+    #endif
 
     std::string outFilename = "a.out";
     if (argc < 2){
@@ -74,23 +75,16 @@ int main(int argc, const char** argv){
     
 
     std::cout << "-------------| Binary |-------------\n";
-    std::cout << "The binary is " << binary.size() * sizeof(uint64_t) << " bytes large.\n";
-    if (binary.size() * sizeof(uint64_t) != binarySize){
-        std::cout << "The estemated size was " << binarySize << "bytes.";
-    }
-
-    if constexpr (std::endian::native != std::endian::little){
-        // swap the endianness
-        for (auto& x : binary){
-            x = std::byteswap(x);
-        }
+    std::cout << "The binary is " << binary.size() * sizeof(int64_t) << " bytes large.\n";
+    if (binary.size() * sizeof(int64_t) != binarySize){
+        std::cout << "The estimated size was " << binarySize << "bytes!";
     }
     std::ofstream outfile(outFilename, std::ios::binary);
     if (!outfile.is_open()){
         std::cout << "Error opening output file!\n";
         return 1;
     }
-    outfile.write(reinterpret_cast<char*>(binary.data()), sizeof(uint64_t) * binary.size() / sizeof(char));
+    outfile.write(reinterpret_cast<char*>(binary.data()), sizeof(int64_t) * binary.size() / sizeof(char));
 
     return 0;
 }
