@@ -8,13 +8,11 @@
 #include "Token.hpp"
 #include "SourceInformation.hpp"
 
-inline void printError(SourceInformation info, std::string msg)
-{
+inline void printError(SourceInformation info, std::string msg){
     std::cout << info.filename << ":" << info.line << ":" << info.column << ": " << msg;
 }
 
-inline std::string generateUniqueLabel()
-{
+inline std::string generateUniqueLabel(){
     static uint64_t counter;
     std::stringstream ss;
     ss << "label_" << std::hex << counter++ << std::dec;

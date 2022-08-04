@@ -42,14 +42,14 @@ uint64_t positionTokens(std::vector<Token>& tokens){
         if (getToken().type == TokenType::Instruction){
             auto& instr = consumeType(TokenType::Instruction);
             if (instr.lexeme == "subleq"){
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint64_t);
-                pos += sizeof(uint64_t);
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
+                pos++;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint64_t);
-                pos += sizeof(uint64_t);
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
+                pos++;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint64_t);
-                pos += sizeof(uint64_t);
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
+                pos++;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else{
@@ -59,8 +59,8 @@ uint64_t positionTokens(std::vector<Token>& tokens){
         else if (getToken().type == TokenType::Keyword){
             auto& kwd = consumeType(TokenType::Keyword);
             if (kwd.lexeme == ".data"){
-                consumeType(TokenType::Number).binarySize = sizeof(uint64_t);
-                pos += sizeof(uint64_t);
+                consumeType(TokenType::Number).binarySize = sizeof(int64_t);
+                pos++;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else{
@@ -72,5 +72,5 @@ uint64_t positionTokens(std::vector<Token>& tokens){
         }
     }
 
-    return pos;
+    return pos*sizeof(int64_t);
 }
