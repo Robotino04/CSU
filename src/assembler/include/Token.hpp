@@ -12,10 +12,14 @@ enum class TokenType{
     Comment,    // ; <some text>
     Colon,      // :
     Comma,      // ,
-    Address,    // number prefixed by $ apeccifiyng a memory location
+    Address,    // number prefixed by $ specifying a memory location
     Keyword,    // assembler directives (.data, etc.)
     Instruction,// mnemonics
     Newline,    // \n
+    OpenBrace,  // {
+    CloseBrace, // }
+    MacroName,  // <some text>
+
     EndOfFile,  // \0
 };
 
@@ -38,6 +42,14 @@ struct Token{
     }
 };
 
+
+struct Macro{
+    std::string name;
+    std::vector<std::string> arguments;
+    std::vector<Token> body;
+    std::vector<std::string> localLabels;
+};
+
 namespace std{
     #define TO_STRING(CODE) #CODE
     #define CASE(TYPE) case TokenType::TYPE: return TO_STRING(TokenType::TYPE); break
@@ -54,6 +66,9 @@ namespace std{
             CASE(Instruction);
             CASE(Comma);
             CASE(Address);
+            CASE(OpenBrace);
+            CASE(CloseBrace);
+            CASE(MacroName);
             CASE(EndOfFile);
             default:
                 return "Unimplemented token nr. " + std::to_string(static_cast<int>(type));

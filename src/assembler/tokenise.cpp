@@ -57,6 +57,14 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 consume();
                 token = {TokenType::Newline, "\\n"};
                 break;
+            case '{':
+                consume();
+                token = {TokenType::OpenBrace, "{"};
+                break;
+            case '}':
+                consume();
+                token = {TokenType::CloseBrace, "}"};
+                break;
             case '$':
                 token.lexeme = consume();
                 if (!(std::isdigit(getChar()) || getChar() == '-' || getChar() == '+')){

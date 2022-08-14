@@ -11,7 +11,11 @@ void resolveLabels(std::vector<Token>& tokens){
             do {
                 targetLabel = std::find(targetLabel+1, tokens.end(), tokens.at(i));
             }
-            while ((targetLabel+1)->type != TokenType::Colon);
+            while ((targetLabel+1)->type != TokenType::Colon && targetLabel != tokens.end());
+
+            if (targetLabel == tokens.end()){
+                printError(tokens.at(i).sourceInfo, "Label \"" + tokens.at(i).lexeme +"\" not found!\n");
+            }
 
             tokens.at(i).type = TokenType::Address;
             tokens.at(i).lexeme = "$" + std::to_string(targetLabel->binaryPos);

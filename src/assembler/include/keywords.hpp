@@ -3,10 +3,11 @@
 #include <vector>
 #include <string>
 
-inline std::vector<std::string> keywords = {
+const inline std::vector<std::string> keywords = {
     ".data",
+    ".macro",
 };
 
-inline std::vector<std::string> instructions = {
+const inline std::vector<std::string> instructions = {
     "subleq",
 };

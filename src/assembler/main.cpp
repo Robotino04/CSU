@@ -59,9 +59,10 @@ int main(int argc, const char** argv){
     std::stringstream buffer;
     buffer << infile.rdbuf();
     std::string source = buffer.str();
-    auto tokens = expandTokens(tokenise(source, inFilename));
+
+    std::vector<Macro> macros;
+    auto tokens = expandTokens(tokenise(source, inFilename), macros);
     uint64_t binarySize = positionTokens(tokens);
-    resolveLabels(tokens);
 
     std::cout << "-------------| Tokens |-------------\n";
     for (auto const& tok : tokens){
@@ -71,7 +72,10 @@ int main(int argc, const char** argv){
     std::cout << "------| Reconstructed Source |------\n";
     std::cout << reconstructSource(tokens);
     
+    resolveLabels(tokens);
     auto binary = generateBinary(tokens, binarySize);
+
+    int binarySizeSum = 0;
     
 
     std::cout << "-------------| Binary |-------------\n";
