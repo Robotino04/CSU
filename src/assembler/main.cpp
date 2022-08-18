@@ -4,7 +4,15 @@
 #include <vector>
 
 #include "Token.hpp"
-#include "parsingFunctions.hpp"
+
+#include "TokenizingPass.hpp"
+#include "ExpandingPass.hpp"
+#include "PositioningPass.hpp"
+#include "LabelResolutionPass.hpp"
+#include "BinaryGenerationPass.hpp"
+
+#include "SourceReconstructionPass.hpp"
+
 
 
 void printHelp(const char* argv0){
@@ -50,33 +58,52 @@ int main(int argc, const char** argv){
     }
     std::string inFilename = argv[argc-1];
 
-    std::ifstream infile(inFilename);
-    if (!infile.is_open()){
-        std::cout << "Error opening input file!\n";
-        return 1;
+    TokenizingPass tokenizer(inFilename);
+    ExpandingPass expander(inFilename);
+    PositioningPass positioner(inFilename);
+    LabelResolutionPass labelResolver(inFilename);
+    BinaryGenerationPass binaryGenerator(inFilename);
+
+    SourceReconstructionPass sourceReconstructor(inFilename);
+    std::vector<Token> tokens;
+    std::vector<int64_t> binary;
+    int binarySize = 0;
+
+    #ifdef NDEBUG
+    try{
+    #endif
+        tokenizer(tokens);
+        std::cout << "-------------| Raw Tokens |-------------\n";
+        for (auto const& tok : tokens){
+            std::cout << std::to_string(tok) << "\n";
+        }
+        expander(tokens);
+        positioner(tokens);
+
+        binarySize = positioner.getBinarySize();
+
+        std::cout << "-------------| Expanded Tokens |-------------\n";
+        for (auto const& tok : tokens){
+            std::cout << std::to_string(tok) << "\n";
+        }
+
+        std::cout << "------| Reconstructed Source |------\n";
+        std::cout << tokens.size() << " tokens\n";
+        sourceReconstructor(tokens);
+        std::cout << sourceReconstructor.getSource() << "\n" << std::flush;
+        
+        labelResolver(tokens);
+        binaryGenerator(tokens);
+
+        binary = binaryGenerator.getBinary();
+
+    #ifdef NDEBUG
     }
-
-    std::stringstream buffer;
-    buffer << infile.rdbuf();
-    std::string source = buffer.str();
-
-    std::vector<Macro> macros;
-    auto tokens = expandTokens(tokenise(source, inFilename), macros);
-    uint64_t binarySize = positionTokens(tokens);
-
-    std::cout << "-------------| Tokens |-------------\n";
-    for (auto const& tok : tokens){
-        std::cout << std::to_string(tok) << "\n";
+    catch(std::runtime_error& e){
+            std::cout << "Compilation failed!\n";
+            return 1;
     }
-
-    std::cout << "------| Reconstructed Source |------\n";
-    std::cout << reconstructSource(tokens);
-    
-    resolveLabels(tokens);
-    auto binary = generateBinary(tokens, binarySize);
-
-    int binarySizeSum = 0;
-    
+    #endif
 
     std::cout << "-------------| Binary |-------------\n";
     std::cout << "The binary is " << binary.size() * sizeof(int64_t) << " bytes large.\n";

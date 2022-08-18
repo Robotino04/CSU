@@ -1,51 +1,71 @@
-#include "parsingFunctions.hpp"
+#include "TokenizingPass.hpp"
 #include "keywords.hpp"
 #include "Token.hpp"
 
 #include <algorithm>
+#include <fstream>
 
-std::vector<Token> tokenise(std::string source, std::string filename){
-    std::vector<Token> tokens;
-    int charIdx = 0;
-    SourceInformation pos;
-    pos.line = 1;
-    pos.column = 0;
-    pos.filename = filename;
+TokenizingPass::TokenizingPass(std::string filename){
+    this->filename = filename;
 
-    const auto isDone = [&](){
-        return charIdx >= source.size();
-    };
-    const auto getChar = [&](){
-        if (isDone())
-            return '\0';
-        return source[charIdx];
-    };
-    const auto matches = [&](const char chr){
-        return source[charIdx] == chr;
-    };
-    const auto consume = [&](){
-        pos.column++;
-        if (charIdx > 0 && source[charIdx-1] == '\n'){
-            pos.line++;
-            pos.column = 0;
-        }
-        return source[charIdx++];
-    };
-    const auto consumeUntil = [&](const char end){
-        std::string chrs;
-        while (!matches(end)){
-            chrs += consume();
-        }
-        return chrs;
-    };
+    pushErrorContext("reading source file");
 
+    // Read the file into a string
+    std::ifstream infile(filename);
+    if (!infile.is_open()){
+        printError({0, 0, filename}, "Could not open file \"" + filename + "\"");
+    }
+
+    std::stringstream buffer;
+    buffer << infile.rdbuf();
+    source = buffer.str();
+    infile.close();
+    popErrorContext();
+}
+
+bool TokenizingPass::isDone() const{
+    return charIdx >= source.size();
+}
+char TokenizingPass::getChar() const{
+    if (isDone())
+        return '\0';
+    return source[charIdx];
+}
+bool TokenizingPass::matches(const char chr) const{
+    return source[charIdx] == chr;
+}
+char TokenizingPass::consume(){
+    pos.column++;
+    if (charIdx > 0 && source[charIdx-1] == '\n'){
+        pos.line++;
+        pos.column = 0;
+    }
+    return source[charIdx++];
+}
+std::string TokenizingPass::consumeUntil(const char end){
+    std::string chrs;
+    while (!matches(end)){
+        chrs += consume();
+    }
+    return chrs;
+}
+
+static bool charInRange(char chr, char start, char end){
+    return chr >= start && chr <= end;
+}
+
+std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
+    pos = {1, 0, filename};
+    pushErrorContext("tokenizing file \"" + filename + "\"");
     while (!isDone()){
         Token token(TokenType::None, "");
         
         token.sourceInfo = pos;
         switch (getChar()){
             case ';':
+                pushErrorContext("parsing comment");
                 token = {TokenType::Comment, consumeUntil('\n')};
+                popErrorContext();
                 break;
             case ':':
                 token = {TokenType::Colon, consume()};
@@ -66,26 +86,31 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 token = {TokenType::CloseBrace, "}"};
                 break;
             case '$':
+                pushErrorContext("parsing address");
                 token.lexeme = consume();
                 if (!(std::isdigit(getChar()) || getChar() == '-' || getChar() == '+')){
-                    printError(pos, "'$' must be followed by a number!\n");
+                    printError(pos, "'$' must be followed by a number!");
                     exit(1);
                 }
+                popErrorContext();
             case '-':
             case '+':
+                pushErrorContext("parsing signed number");
                 token.lexeme += consume();
                 if (!std::isdigit(getChar())){
-                    printError(pos, token.lexeme + "'+' and '-' must be followed by a number!\n");
+                    printError(pos, token.lexeme + "'+' and '-' must be followed by a number!");
                     exit(1);
                 }
+                popErrorContext();
             case '0'...'9':{
+                pushErrorContext("parsing number");
                 bool isAddress = token.lexeme.size() && token.lexeme.at(0) == '$';
                 token.lexeme = token.lexeme.substr(isAddress ? 1 : 0);
                 
                 token.type = TokenType::Number;
                 token.lexeme += consume();
 
-                int base = 0;
+                int base = 10;
 
                 // the number is octal
                 if (token.lexeme.at(0) == '0' && std::isalnum(getChar()))
@@ -105,7 +130,24 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                         break;
                 }
                 while (!isDone() && std::isalnum(getChar())){
-                    token.lexeme += consume();
+                    auto c = consume();
+                    if (base == 8 && !charInRange(c, '0', '7')){
+                        printError(pos, "Invalid octal number!");
+                        exit(1);
+                    }
+                    else if (base == 16 && !charInRange(c, '0', '9') && !charInRange(c, 'a', 'f') && !charInRange(c, 'A', 'F')){
+                        printError(pos, "Invalid hexadecimal number!");
+                        exit(1);
+                    }
+                    else if (base == 2 && !charInRange(c, '0', '1')){
+                        printError(pos, "Invalid binary number!");
+                        exit(1);
+                    }
+                    else if (base == 10 && !charInRange(c, '0', '9')){
+                        printError(pos, "Invalid decimal number!");
+                        exit(1);
+                    }
+                    token.lexeme += c;
                 }
                 bool failed = false;
                 try{
@@ -119,7 +161,7 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 }
 
                 if (failed){
-                    printError(pos, token.lexeme + " is not a valid number!\n");
+                    printError(pos, token.lexeme + " is not a valid number!");
                     exit(1);
                 }
 
@@ -128,13 +170,14 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                     token.type = TokenType::Address;
                     token.data = (uint64_t)std::any_cast<int64_t>(token.data);
                 }
-
+                popErrorContext();
                 break;
             }
             case 'a'...'z':
             case 'A'...'Z':
             case '.':
             case '_':
+                pushErrorContext("parsing label, instruction, or keyword");
                 token.lexeme = consume();
                 while (!isDone() && (std::isalnum(getChar()) || getChar() == '_')){
                     token.lexeme += consume();
@@ -144,23 +187,26 @@ std::vector<Token> tokenise(std::string source, std::string filename){
                 
                 else if (std::find(keywords.begin(), keywords.end(), token.lexeme) != keywords.end())
                     token.type = TokenType::Keyword;
-                
+                else if (token.lexeme.at(0) == '.')
+                    printError(pos, "Invalid label name or keyword \"" + token.lexeme + "\"!");
                 else
                     token.type = TokenType::Label;
+                popErrorContext();
                 break;
-
 
             default:
                 if (std::isspace(getChar())){
                     consume();
                     break;
                 }
-                printError(pos, std::string("Unknown character \"") + getChar() + "\"\n");
+                printError(pos, std::string("Unknown character \"") + getChar() + "\"");
                 consume();
         }
         if (token.type != TokenType::None)
             tokens.push_back(token);
     }
     tokens.emplace_back(TokenType::EndOfFile, "\\0");
+    
+    popErrorContext();
     return tokens;
 }

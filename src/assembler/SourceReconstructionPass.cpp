@@ -1,8 +1,16 @@
-#include "parsingFunctions.hpp"
+#include "SourceReconstructionPass.hpp"
 
+SourceReconstructionPass::SourceReconstructionPass(std::string filename){
+    this->filename = filename;
+}
 
-std::string reconstructSource(std::vector<Token> const& tokens){
-    std::string source = "; Reconstructed source code\n";
+std::string SourceReconstructionPass::getSource(){
+    return source;
+}
+
+std::vector<Token>& SourceReconstructionPass::operator() (std::vector<Token>& tokens){
+    source = "; Reconstructed source code\n";
+
     for (auto const& tok : tokens){
         if (tok.type == TokenType::Instruction){
             source += tok.lexeme;
@@ -24,5 +32,6 @@ std::string reconstructSource(std::vector<Token> const& tokens){
             source += tok.lexeme;
         }
     }
-    return source + "\n";
+    source += "\n";
+    return tokens;
 }
