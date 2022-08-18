@@ -1,8 +1,14 @@
-#include "parsingFunctions.hpp"
+#include "LabelResolutionPass.hpp"
 
 #include <algorithm>
 
-void resolveLabels(std::vector<Token>& tokens){
+LabelResolutionPass::LabelResolutionPass(std::string filename){
+    this->filename = filename;
+}
+
+
+std::vector<Token>& LabelResolutionPass::operator() (std::vector<Token>& tokens){
+    pushErrorContext("resolving labels in file \"" + filename + "\"");
     for (int i=0;i<tokens.size(); i++){
         if (tokens.at(i).type == TokenType::Label){
             if (i+1 < tokens.size() && tokens.at(i+1).type == TokenType::Colon) continue;
@@ -14,7 +20,7 @@ void resolveLabels(std::vector<Token>& tokens){
             while ((targetLabel+1)->type != TokenType::Colon && targetLabel != tokens.end());
 
             if (targetLabel == tokens.end()){
-                printError(tokens.at(i).sourceInfo, "Label \"" + tokens.at(i).lexeme +"\" not found!\n");
+                printError(tokens.at(i).sourceInfo, "Label \"" + tokens.at(i).lexeme +"\" not found!");
             }
 
             tokens.at(i).type = TokenType::Address;
@@ -22,4 +28,7 @@ void resolveLabels(std::vector<Token>& tokens){
             tokens.at(i).data = (uint64_t)targetLabel->binaryPos;
         }
     }
+    popErrorContext();
+
+    return tokens;
 }
