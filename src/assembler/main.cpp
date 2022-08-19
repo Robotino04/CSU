@@ -66,7 +66,7 @@ int main(int argc, const char** argv){
 
     SourceReconstructionPass sourceReconstructor(inFilename);
     std::vector<Token> tokens;
-    std::vector<int64_t> binary;
+    std::vector<int8_t> binary;
     int binarySize = 0;
 
     #ifdef NDEBUG
@@ -106,8 +106,8 @@ int main(int argc, const char** argv){
     #endif
 
     std::cout << "-------------| Binary |-------------\n";
-    std::cout << "The binary is " << binary.size() * sizeof(int64_t) << " bytes large.\n";
-    if (binary.size() * sizeof(int64_t) != binarySize){
+    std::cout << "The binary is " << binary.size() << " bytes large.\n";
+    if (binary.size() != binarySize){
         std::cout << "The estimated size was " << binarySize << "bytes!";
     }
     std::ofstream outfile(outFilename, std::ios::binary);
@@ -115,7 +115,7 @@ int main(int argc, const char** argv){
         std::cout << "Error opening output file!\n";
         return 1;
     }
-    outfile.write(reinterpret_cast<char*>(binary.data()), sizeof(int64_t) * binary.size() / sizeof(char));
+    outfile.write(reinterpret_cast<char*>(binary.data()), binary.size());
 
     return 0;
 }

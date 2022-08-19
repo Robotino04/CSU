@@ -25,7 +25,7 @@ std::vector<Token>& LabelResolutionPass::operator() (std::vector<Token>& tokens)
 
             tokens.at(i).type = TokenType::Address;
             tokens.at(i).lexeme = "$" + std::to_string(targetLabel->binaryPos);
-            tokens.at(i).data = (uint64_t)targetLabel->binaryPos;
+            tokens.at(i).data = (uint16_t)targetLabel->binaryPos;
         }
     }
     popErrorContext();

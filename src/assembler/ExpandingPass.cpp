@@ -60,7 +60,7 @@ Token ExpandingPass::consumeTypes(std::vector<TokenType> types){
         }
         ss << "but got " << std::to_string(getToken()) + "!\n";
         printError(getToken().sourceInfo, ss.str());
-        exit(1);
+        return tokens->back();
     }
 }
 void ExpandingPass::addGeneratedToken(TokenType type, std::string const& lexeme){
