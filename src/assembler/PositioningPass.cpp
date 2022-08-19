@@ -8,7 +8,7 @@ PositioningPass::PositioningPass(std::string filename){
 
 
 uint64_t PositioningPass::getBinarySize(){
-    return pos * sizeof(uint64_t);
+    return pos;
 }
 
 Token& PositioningPass::getToken(){
@@ -22,7 +22,7 @@ Token& PositioningPass::consumeType(TokenType type){
     }
     else{
         printError(getToken().sourceInfo, "Expected " + std::to_string(type) + ", but got " + std::to_string(getToken()) + "!");
-        exit(1);
+        return tokens->back();
     }
 }
 Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
@@ -38,7 +38,7 @@ Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
         }
         ss << "but got " << std::to_string(getToken()) + "!\n";
         printError(getToken().sourceInfo, ss.str());
-        exit(1);
+        return tokens->back();
     }
 }
 
@@ -52,14 +52,14 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning instruction " + getToken().lexeme);
             auto& instr = consumeType(TokenType::Instruction);
             if (instr.lexeme == "subleq"){
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
-                pos++;
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                pos+=2;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
-                pos++;
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                pos+=2;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(int64_t);
-                pos++;
+                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else{
@@ -71,7 +71,7 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning keyword " + getToken().lexeme);
             auto& kwd = consumeType(TokenType::Keyword);
             if (kwd.lexeme == ".data"){
-                consumeType(TokenType::Number).binarySize = sizeof(int64_t);
+                consumeType(TokenType::Number).binarySize = sizeof(int8_t);
                 pos++;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }

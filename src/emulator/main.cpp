@@ -43,11 +43,11 @@ int main(int argc, const char** argv) {
         std::cout << "Error opening input file!\n";
         return 1;
     }
-    std::vector<int64_t> binary;
+    std::vector<int8_t> binary;
     infile.seekg(0, std::ios::end);
     int length = infile.tellg();
     infile.seekg(0, std::ios::beg);
-    binary.resize(length/sizeof(int64_t));
+    binary.resize(length);
     infile.read(reinterpret_cast<char*>(binary.data()), length);
     infile.close();
 

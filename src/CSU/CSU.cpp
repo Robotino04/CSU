@@ -1,7 +1,9 @@
 #include "CSU.hpp"
+#include "utils.hpp"
 
 #include <memory.h>
 #include <iostream>
+#include <array>
 
 CSU::CSU(int memorySize){
     memory.resize(memorySize);
@@ -9,13 +11,19 @@ CSU::CSU(int memorySize){
 
 void CSU::step(){
     lastPc = pc;
-    const uint64_t a_ptr = memory[pc++];
-    const uint64_t b_ptr = memory[pc++];
-    const uint64_t c_ptr = memory[pc++];
+    std::array<uint16_t, 3> instruction;
+    for (int i=0;i<3;i++){
+        auto a = memory[pc++];
+        auto b = memory[pc++];
+        instruction[i] = toAddress(a, b);
+    }
+    const auto a_ptr = instruction[0];
+    const auto b_ptr = instruction[1];
+    const auto c = instruction[2];
 
     memory[b_ptr] -= memory[a_ptr];
     if (memory[b_ptr] <= 0)
-        pc = c_ptr;
+        pc = c;
 }
 void CSU::run(){
     while (pc < memory.size()){
@@ -23,7 +31,6 @@ void CSU::run(){
         step();
     }
 }
-
 
 void CSU::printState(uint64_t size){
     std::cout << std::hex << "CSU (size=0x" << memory.size() << ") last at 0x" << lastPc << " (exit at 0x" << pc << "):";
@@ -37,16 +44,11 @@ void CSU::printState(uint64_t size){
         end = memory.size();
         
     std::cout << "\nMemory from 0x" << start << " to 0x" << end << ":\n";
-    for (uint64_t i = start; i < end; i++){
-        if ((i-start) % 8 == 0)
-            std::cout << "\n\t";
-        std::cout << memory.at(i) << "\t";
-    }
-    std::cout << "\n" << std::dec;
+    HexDump(std::vector<uint8_t>(memory.begin() + start, memory.begin() + end), std::cout);
 }
 
 
-void CSU::setMemoryRegion(uint64_t start, std::vector<int64_t> newValues){
+void CSU::setMemoryRegion(uint64_t start, std::vector<int8_t> newValues){
     if (start + newValues.size() > memory.size())
         throw std::out_of_range("Invalid memory region");
 

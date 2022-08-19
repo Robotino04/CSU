@@ -90,7 +90,6 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                 token.lexeme = consume();
                 if (!(std::isdigit(getChar()) || getChar() == '-' || getChar() == '+')){
                     printError(pos, "'$' must be followed by a number!");
-                    exit(1);
                 }
                 popErrorContext();
             case '-':
@@ -99,7 +98,6 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                 token.lexeme += consume();
                 if (!std::isdigit(getChar())){
                     printError(pos, token.lexeme + "'+' and '-' must be followed by a number!");
-                    exit(1);
                 }
                 popErrorContext();
             case '0'...'9':{
@@ -133,25 +131,21 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                     auto c = consume();
                     if (base == 8 && !charInRange(c, '0', '7')){
                         printError(pos, "Invalid octal number!");
-                        exit(1);
                     }
                     else if (base == 16 && !charInRange(c, '0', '9') && !charInRange(c, 'a', 'f') && !charInRange(c, 'A', 'F')){
                         printError(pos, "Invalid hexadecimal number!");
-                        exit(1);
                     }
                     else if (base == 2 && !charInRange(c, '0', '1')){
                         printError(pos, "Invalid binary number!");
-                        exit(1);
                     }
                     else if (base == 10 && !charInRange(c, '0', '9')){
                         printError(pos, "Invalid decimal number!");
-                        exit(1);
                     }
                     token.lexeme += c;
                 }
                 bool failed = false;
                 try{
-                    token.data = (int64_t)std::stoi(token.lexeme, nullptr, base);
+                    token.data = (int64_t)std::stoll(token.lexeme, nullptr, base);
                 }
                 catch(std::invalid_argument){
                     failed = true;
@@ -162,13 +156,16 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
 
                 if (failed){
                     printError(pos, token.lexeme + " is not a valid number!");
-                    exit(1);
                 }
 
                 if (isAddress){
                     token.lexeme.insert(token.lexeme.begin(), '$');
                     token.type = TokenType::Address;
-                    token.data = (uint64_t)std::any_cast<int64_t>(token.data);
+                    token.data = static_cast<uint16_t>(std::any_cast<int64_t>(token.data));
+                }
+                else{
+                    token.type = TokenType::Number;
+                    token.data = static_cast<int8_t>(std::any_cast<int64_t>(token.data));
                 }
                 popErrorContext();
                 break;

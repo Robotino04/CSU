@@ -1,7 +1,12 @@
 # CSU - Central Subtraction Unit
 
 CSU is a CPU design built to work with only one instruction: a subtraction.
-if the result of the subtraction is negative or zero, execution branches to a given address.
+
+## Architecture
+The CSU is a 8-bit CPU with a 16-bit address space. The only instruction is a subtraction that
+subtracts the data at the first address from the data at the second address and stores the result at the
+second address. If the result is negative or zero, execution branches to the address speccified by the third
+operand. Addresses are stored as little-endian.
 
 ## Assembler
 The custom assembler for the CSU is divided into five stages:
