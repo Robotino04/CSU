@@ -26,6 +26,9 @@ bool ExpandingPass::matchNext(TokenType type) const{
 bool ExpandingPass::match(TokenType type) const{
     return getToken().type == type;
 }
+bool ExpandingPass::match(std::vector<TokenType> types) const{
+    return std::find(types.begin(), types.end(), getToken().type) != types.end();
+}
 Token ExpandingPass::consume(){
     if (isDone()){
         printError(tokens->back().sourceInfo, "Unexpected end of file");
@@ -44,7 +47,7 @@ Token ExpandingPass::consumeType(TokenType type){
         return consume();
     }
     else{
-        printError(getToken().sourceInfo, "Expected " + std::to_string(type) + ", but got " + std::to_string(getToken()) + "!");
+        printError(getToken().sourceInfo, "Expected " + std::to_string(type) + " but got " + std::to_string(getToken()));
         return tokens->back();
     }
 }
@@ -58,13 +61,46 @@ Token ExpandingPass::consumeTypes(std::vector<TokenType> types){
         for (int i=0; i<types.size(); i++){
             ss << std::to_string(types.at(i)) << (i==types.size()-1 ? "" : ", ");
         }
-        ss << "but got " << std::to_string(getToken()) + "!\n";
+        ss << " but got " << std::to_string(getToken());
         printError(getToken().sourceInfo, ss.str());
         return tokens->back();
     }
 }
 void ExpandingPass::addGeneratedToken(TokenType type, std::string const& lexeme){
     tokens->insert(tokensIt, Token(type, lexeme))->sourceInfo = std::prev(tokensIt)->sourceInfo;
+}
+std::vector<Token> ExpandingPass::consumeExpressionTypes(){
+    std::vector<Token> tokens;
+    do{
+        tokens.push_back(consumeTypes({
+            TokenType::Number,
+            TokenType::Address,
+            TokenType::Label,
+            TokenType::Plus,
+            TokenType::Minus,
+            TokenType::Star,
+            TokenType::Slash,
+            TokenType::Percent,
+            TokenType::Bang,
+            TokenType::Tilde,
+            TokenType::OpenParen,
+            TokenType::CloseParen,
+        }));
+    }while (match({
+        TokenType::Number,
+        TokenType::Address,
+        TokenType::Label,
+        TokenType::Plus,
+        TokenType::Minus,
+        TokenType::Star,
+        TokenType::Slash,
+        TokenType::Percent,
+        TokenType::Bang,
+        TokenType::Tilde,
+        TokenType::OpenParen,
+        TokenType::CloseParen,
+    }));
+    return tokens;
 }
 
 std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
@@ -92,14 +128,14 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("parsing instruction");
             if (getToken().lexeme == "subleq"){
                 consume();
-                consumeTypes({TokenType::Label, TokenType::Address});
+                consumeExpressionTypes();
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address});
+                consumeExpressionTypes();
                 
                 if (match(TokenType::Comma)){
                     // the jump address is given
                     consumeType(TokenType::Comma);
-                    consumeTypes({TokenType::Label, TokenType::Address});
+                    consumeExpressionTypes();
                     consumeTypes({TokenType::Newline, TokenType::EndOfFile});
                 }
                 else{
@@ -125,18 +161,31 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
             });
 
             if (macro != macros.end()){
+                // it is one
                 removeTokens = true;
                 consumeType(TokenType::Label);
                 // expand the macro
-                auto bodyCopy = macro->body;
+                std::list<Token> bodyCopy(macro->body.begin(), macro->body.end());
                 
                 pushErrorContext("expanding macro arguments for \"" + macro->name + "\"");
                 // replace the macro arguments with values from the macro call
                 for (int i=0; i<macro->arguments.size(); i++){
-                    auto value = consumeTypes({TokenType::Label, TokenType::Address, TokenType::Number});
-                    std::replace_if(bodyCopy.begin(), bodyCopy.end(), [&](Token const& t){
+                    auto value = consumeExpressionTypes();
+                    auto toReplace = std::find_if(bodyCopy.begin(), bodyCopy.end(), [&](Token const& t){
                         return t.type == TokenType::Label && t.lexeme == macro->arguments.at(i);
-                    }, value);
+                    });
+                    
+                    while (toReplace != bodyCopy.end()){
+                        toReplace = bodyCopy.erase(toReplace);
+                        bodyCopy.insert(toReplace, value.begin(), value.end());
+                        std::advance(toReplace, value.size());
+
+
+                        toReplace = std::find_if(toReplace, bodyCopy.end(), [&](Token const& t){
+                            return t.type == TokenType::Label && t.lexeme == macro->arguments.at(i);
+                        });
+                    }
+
                     if (i != macro->arguments.size()-1){
                         if (match(TokenType::Comma)){
                             consumeType(TokenType::Comma);
@@ -152,7 +201,8 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
                 {
                     std::string savedMacroName = currentMacroName;
                     currentMacroName = macro->name;
-                    expandedBody = (*this)(bodyCopy);
+                    std::vector<Token> bodyCopyVector(bodyCopy.begin(), bodyCopy.end());
+                    expandedBody = (*this)(bodyCopyVector);
                     currentMacroName = savedMacroName;
                 }
 
@@ -213,7 +263,14 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
             else if (getToken().lexeme == ".data"){
                 pushErrorContext("parsing \".data\" directive");
                 consumeType(TokenType::Keyword);
-                consumeType(TokenType::Number);
+                consumeExpressionTypes();
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+                popErrorContext();
+            }
+            else if (getToken().lexeme == ".address"){
+                pushErrorContext("parsing \".address\" directive");
+                consumeType(TokenType::Keyword);
+                consumeExpressionTypes();
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
                 popErrorContext();
             }

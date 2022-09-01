@@ -54,6 +54,9 @@ static bool charInRange(char chr, char start, char end){
     return chr >= start && chr <= end;
 }
 
+// defines a Single Character Token
+#define SCT(TYPE, CHR) case CHR: token = {TokenType::TYPE, consume()}; break
+
 std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
     pos = {1, 0, filename};
     pushErrorContext("tokenizing file \"" + filename + "\"");
@@ -67,37 +70,23 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                 token = {TokenType::Comment, consumeUntil('\n')};
                 popErrorContext();
                 break;
-            case ':':
-                token = {TokenType::Colon, consume()};
-                break;
-            case ',':
-                token = {TokenType::Comma, consume()};
-                break;
-            case '\n':
-                consume();
-                token = {TokenType::Newline, "\\n"};
-                break;
-            case '{':
-                consume();
-                token = {TokenType::OpenBrace, "{"};
-                break;
-            case '}':
-                consume();
-                token = {TokenType::CloseBrace, "}"};
-                break;
+            SCT(Colon, ':');
+            SCT(Comma, ',');
+            SCT(Newline, '\n');
+            SCT(OpenBrace, '{');
+            SCT(CloseBrace, '}');
+            SCT(Plus, '+');
+            SCT(Minus, '-');
+            SCT(Star, '*');
+            SCT(Slash, '/');
+            SCT(OpenParen, '(');
+            SCT(CloseParen, ')');
+                
             case '$':
                 pushErrorContext("parsing address");
                 token.lexeme = consume();
                 if (!(std::isdigit(getChar()) || getChar() == '-' || getChar() == '+')){
                     printError(pos, "'$' must be followed by a number!");
-                }
-                popErrorContext();
-            case '-':
-            case '+':
-                pushErrorContext("parsing signed number");
-                token.lexeme += consume();
-                if (!std::isdigit(getChar())){
-                    printError(pos, token.lexeme + "'+' and '-' must be followed by a number!");
                 }
                 popErrorContext();
             case '0'...'9':{
@@ -132,7 +121,7 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                     if (base == 8 && !charInRange(c, '0', '7')){
                         printError(pos, "Invalid octal number!");
                     }
-                    else if (base == 16 && !charInRange(c, '0', '9') && !charInRange(c, 'a', 'f') && !charInRange(c, 'A', 'F')){
+                    else if (base == 16 && !(charInRange(c, '0', '9') || charInRange(c, 'a', 'f') || charInRange(c, 'A', 'F'))){
                         printError(pos, "Invalid hexadecimal number!");
                     }
                     else if (base == 2 && !charInRange(c, '0', '1')){

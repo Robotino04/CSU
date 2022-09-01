@@ -11,8 +11,11 @@ class PositioningPass : public ASMPass{
 
     private:
         Token& getToken();
+        Token const& getToken() const;
         Token& consumeType(TokenType type);
         Token& consumeTypes(std::vector<TokenType> types);
+        void consumeExpression(bool shouldBeAddress);
+        bool match(std::vector<TokenType> types) const;
 
     private:
         std::string filename;
