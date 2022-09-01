@@ -2,6 +2,8 @@
 
 #include "ASMPass.hpp"
 
+#include <sstream>
+
 class SourceReconstructionPass : public ASMPass{
     public:
         SourceReconstructionPass(std::string filename);
@@ -11,5 +13,5 @@ class SourceReconstructionPass : public ASMPass{
 
     private:
         std::string filename;
-        std::string source;
+        std::stringstream source;
 };

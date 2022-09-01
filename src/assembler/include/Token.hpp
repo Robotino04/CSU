@@ -16,9 +16,20 @@ enum class TokenType{
     Keyword,    // assembler directives (.data, etc.)
     Instruction,// mnemonics
     Newline,    // \n
+
     OpenBrace,  // {
     CloseBrace, // }
     MacroName,  // <some text>
+
+    Plus,       // +
+    Minus,      // -
+    Star,       // *
+    Slash,      // /
+    Percent,    // %
+    Bang,       // !
+    Tilde,      // ~
+    OpenParen,  // (
+    CloseParen, // )
 
     EndOfFile,  // \0
 };
@@ -66,9 +77,19 @@ namespace std{
             CASE(Instruction);
             CASE(Comma);
             CASE(Address);
+
             CASE(OpenBrace);
             CASE(CloseBrace);
             CASE(MacroName);
+
+            CASE(Plus);
+            CASE(Minus);
+            CASE(Star);
+            CASE(Slash);
+            CASE(Percent);
+            CASE(OpenParen);
+            CASE(CloseParen);
+
             CASE(EndOfFile);
             default:
                 return "Unimplemented token nr. " + std::to_string(static_cast<int>(type));

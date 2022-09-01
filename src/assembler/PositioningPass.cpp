@@ -14,6 +14,9 @@ uint64_t PositioningPass::getBinarySize(){
 Token& PositioningPass::getToken(){
     return tokens->at(index);
 }
+Token const& PositioningPass::getToken() const{
+    return tokens->at(index);
+}
 
 Token& PositioningPass::consumeType(TokenType type){
     if (getToken().type == type){
@@ -26,7 +29,7 @@ Token& PositioningPass::consumeType(TokenType type){
     }
 }
 Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
-    if (std::find(types.begin(), types.end(), getToken().type)  != types.end()){
+    if (std::find(types.begin(), types.end(), getToken().type) != types.end()){
         tokens->at(index).binaryPos = pos;
         return tokens->at(index++);
     }
@@ -41,6 +44,49 @@ Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
         return tokens->back();
     }
 }
+bool PositioningPass::match(std::vector<TokenType> types) const{
+    return std::find(types.begin(), types.end(), getToken().type) != types.end();
+}
+void PositioningPass::consumeExpression(bool shouldBeAddress){
+    bool hasAddress = false;
+    do{
+        TokenType type = consumeTypes({
+            TokenType::Number,
+            TokenType::Address,
+            TokenType::Label,
+            TokenType::Plus,
+            TokenType::Minus,
+            TokenType::Star,
+            TokenType::Slash,
+            TokenType::Percent,
+            TokenType::Bang,
+            TokenType::Tilde,
+            TokenType::OpenParen,
+            TokenType::CloseParen,
+        }).type;
+        hasAddress |= (type == TokenType::Address || type == TokenType::Label);
+    }
+    while (match({
+        TokenType::Number,
+        TokenType::Address,
+        TokenType::Label,
+        TokenType::Plus,
+        TokenType::Minus,
+        TokenType::Star,
+        TokenType::Slash,
+        TokenType::Percent,
+        TokenType::Bang,
+        TokenType::Tilde,
+        TokenType::OpenParen,
+        TokenType::CloseParen,
+    }));
+    if (shouldBeAddress && !hasAddress){
+        printError(getToken().sourceInfo, "Expected expression resulting in an address");
+    }
+    else if (!shouldBeAddress && hasAddress){
+        printError(getToken().sourceInfo, "Expected expression resulting in a number");
+    }
+}
 
 std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
     this->tokens = &tokens;
@@ -52,13 +98,13 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning instruction " + getToken().lexeme);
             auto& instr = consumeType(TokenType::Instruction);
             if (instr.lexeme == "subleq"){
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                consumeExpression(true);
                 pos+=2;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                consumeExpression(true);
                 pos+=2;
                 consumeType(TokenType::Comma);
-                consumeTypes({TokenType::Label, TokenType::Address}).binarySize = sizeof(uint16_t);
+                consumeExpression(true);
                 pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
@@ -71,8 +117,13 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning keyword " + getToken().lexeme);
             auto& kwd = consumeType(TokenType::Keyword);
             if (kwd.lexeme == ".data"){
-                consumeType(TokenType::Number).binarySize = sizeof(int8_t);
+                consumeExpression(false);
                 pos++;
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+            }
+            else if (kwd.lexeme == ".address"){
+                consumeExpression(true);
+                pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else{

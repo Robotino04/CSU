@@ -9,6 +9,7 @@
 #include "ExpandingPass.hpp"
 #include "PositioningPass.hpp"
 #include "LabelResolutionPass.hpp"
+#include "EvaluationPass.hpp"
 #include "BinaryGenerationPass.hpp"
 
 #include "SourceReconstructionPass.hpp"
@@ -62,6 +63,7 @@ int main(int argc, const char** argv){
     ExpandingPass expander(inFilename);
     PositioningPass positioner(inFilename);
     LabelResolutionPass labelResolver(inFilename);
+    EvaluationPass evaluator(inFilename);
     BinaryGenerationPass binaryGenerator(inFilename);
 
     SourceReconstructionPass sourceReconstructor(inFilename);
@@ -78,21 +80,24 @@ int main(int argc, const char** argv){
             std::cout << std::to_string(tok) << "\n";
         }
         expander(tokens);
-        positioner(tokens);
-
-        binarySize = positioner.getBinarySize();
-
         std::cout << "-------------| Expanded Tokens |-------------\n";
         for (auto const& tok : tokens){
             std::cout << std::to_string(tok) << "\n";
         }
 
-        std::cout << "------| Reconstructed Source |------\n";
-        std::cout << tokens.size() << " tokens\n";
+
+        positioner(tokens);
+        labelResolver(tokens);
+        evaluator(tokens);
+
+        binarySize = positioner.getBinarySize();
+
+
+        std::cout << ";------| Reconstructed Source |------\n";
+        std::cout << ";" << tokens.size() << " tokens\n";
         sourceReconstructor(tokens);
         std::cout << sourceReconstructor.getSource() << "\n" << std::flush;
         
-        labelResolver(tokens);
         binaryGenerator(tokens);
 
         binary = binaryGenerator.getBinary();
@@ -100,8 +105,8 @@ int main(int argc, const char** argv){
     #ifdef NDEBUG
     }
     catch(std::runtime_error& e){
-            std::cout << "Compilation failed!\n";
-            return 1;
+        std::cout << "Compilation failed!\n";
+        return 1;
     }
     #endif
 

@@ -9,7 +9,7 @@ void HexDump(const std::vector<uint8_t>& bytes, std::ostream& stream, size_t sta
     char buff[17];
     size_t i = 0;
 
-    if (start > bytes.size())
+    if (start >= bytes.size())
         throw std::out_of_range("Invalid memory region");
 
     stream << std::hex;
@@ -22,7 +22,7 @@ void HexDump(const std::vector<uint8_t>& bytes, std::ostream& stream, size_t sta
         if ((i % 16) == 0)
         {
             // Just don't print ASCII for the zeroth line.
-            if (i != 0)
+            if (i != start)
             {
                 stream << "  " << buff << std::endl;
             }

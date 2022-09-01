@@ -60,7 +60,7 @@ int main(int argc, const char** argv) {
     csu.setMemoryRegion(0, binary);
 
     csu.run();
-    csu.printState(32);
+    csu.printState(128);
 
 
     return 0;

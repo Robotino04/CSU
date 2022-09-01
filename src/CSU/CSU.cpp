@@ -42,9 +42,12 @@ void CSU::printState(uint64_t size){
         start = 0;
     if (end > memory.size())
         end = memory.size();
+    
+    // round down to multiple of 16 (cut the last 4 bits)
+    start = start & ~0xF;
         
-    std::cout << "\nMemory from 0x" << start << " to 0x" << end << ":\n";
-    HexDump(std::vector<uint8_t>(memory.begin() + start, memory.begin() + end), std::cout);
+    std::cout << "\nMemory from 0x" << start << " to 0x" << end-1 << ":\n";
+    HexDump(std::vector<uint8_t>(memory.begin(), memory.begin() + end), std::cout, start);
 }
 
 

@@ -9,12 +9,13 @@ second address. If the result is negative or zero, execution branches to the add
 operand. Addresses are stored as little-endian.
 
 ## Assembler
-The custom assembler for the CSU is divided into five stages:
+The custom assembler for the CSU is divided into six stages:
 1. tokenising: converting the source code into tokens
 2. token expanding: inlining pseudo instructions and implicit arguments
 3. token positioning: establishing the position and size of each token
 4. label resolution: replacing labels by their corresponding address
-5. binary generation: converting the tokens into the final binary
+5. evaluation: evaluating label offsets and constant values
+6. binary generation: converting the tokens into the final binary
 
 
 ## Resources
