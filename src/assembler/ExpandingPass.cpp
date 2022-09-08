@@ -274,6 +274,13 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
                 popErrorContext();
             }
+            else if (getToken().lexeme == ".org"){
+                pushErrorContext("parsing \".org\" directive");
+                consumeType(TokenType::Keyword);
+                consumeExpressionTypes();
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+                popErrorContext();
+            }
             else{
                 printError(getToken().sourceInfo, "Unknown keyword " + getToken().lexeme + "!");
             }

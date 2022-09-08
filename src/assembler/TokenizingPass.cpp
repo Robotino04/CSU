@@ -60,6 +60,8 @@ static bool charInRange(char chr, char start, char end){
 std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
     pos = {1, 0, filename};
     pushErrorContext("tokenizing file \"" + filename + "\"");
+
+    tokens.emplace_back(TokenType::BeginOfFile, "");
     while (!isDone()){
         Token token(TokenType::None, "");
         
