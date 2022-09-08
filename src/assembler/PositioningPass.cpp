@@ -1,4 +1,5 @@
 #include "PositioningPass.hpp"
+#include "EvaluationPass.hpp"
 
 #include <algorithm>
 
@@ -8,7 +9,7 @@ PositioningPass::PositioningPass(std::string filename){
 
 
 uint64_t PositioningPass::getBinarySize(){
-    return pos;
+    return maxPos;
 }
 
 Token& PositioningPass::getToken(){
@@ -47,10 +48,11 @@ Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
 bool PositioningPass::match(std::vector<TokenType> types) const{
     return std::find(types.begin(), types.end(), getToken().type) != types.end();
 }
-void PositioningPass::consumeExpression(bool shouldBeAddress){
+std::vector<Token> PositioningPass::consumeExpression(bool shouldBeAddress){
     bool hasAddress = false;
+    std::vector<Token> expr;
     do{
-        TokenType type = consumeTypes({
+        expr.push_back(consumeTypes({
             TokenType::Number,
             TokenType::Address,
             TokenType::Label,
@@ -63,8 +65,8 @@ void PositioningPass::consumeExpression(bool shouldBeAddress){
             TokenType::Tilde,
             TokenType::OpenParen,
             TokenType::CloseParen,
-        }).type;
-        hasAddress |= (type == TokenType::Address || type == TokenType::Label);
+        }));
+        hasAddress |= (expr.back().type == TokenType::Address || expr.back().type == TokenType::Label);
     }
     while (match({
         TokenType::Number,
@@ -86,6 +88,7 @@ void PositioningPass::consumeExpression(bool shouldBeAddress){
     else if (!shouldBeAddress && hasAddress){
         printError(getToken().sourceInfo, "Expected expression resulting in a number");
     }
+    return expr;
 }
 
 std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
@@ -126,6 +129,29 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
                 pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
+            else if (kwd.lexeme == ".org"){
+                auto tmp = consumeExpression(true);
+                // construct a parsable token sequence
+                std::vector<Token> expr;
+                expr.reserve(tmp.size()+2);
+
+                expr.push_back(Token(TokenType::BeginOfFile, ""));
+                expr.insert(expr.end(), tmp.begin(), tmp.end());
+                expr.push_back(Token(TokenType::EndOfFile, '\0'));
+
+                // evaluate the expression
+                EvaluationPass evaluater("evaluating .org expression");
+                expr = evaluater(expr);
+
+                // validate the result
+                if (expr.size() && expr.at(1).type == TokenType::Address){
+                    pos = std::any_cast<uint16_t>(expr.at(1).data);
+                }
+                else{
+                    printError(kwd.sourceInfo, ".org directive not followed by address");
+                }
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+            }
             else{
                 printError(kwd.sourceInfo, "Unimplemented keyword \"" + kwd.lexeme + "\"!");
             }
@@ -134,6 +160,7 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
         else{
             consumeType(getToken().type);
         }
+        maxPos = std::max(maxPos, pos);
     }
 
     return tokens;

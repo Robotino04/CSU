@@ -6,32 +6,33 @@
 #include "SourceInformation.hpp"
 
 enum class TokenType{
-    None,       // not used, marks an empty token
-    Label,      // anything that is a c/c++ identifier
-    Number,     // anything parsable by std::stoi and binary numbers like 0b010011
-    Comment,    // ; <some text>
-    Colon,      // :
-    Comma,      // ,
-    Address,    // number prefixed by $ specifying a memory location
-    Keyword,    // assembler directives (.data, etc.)
-    Instruction,// mnemonics
-    Newline,    // \n
+    None,           // not used, marks an empty token
+    Label,          // anything that is a c/c++ identifier
+    Number,         // anything parsable by std::stoi and binary numbers like 0b010011
+    Comment,        // ; <some text>
+    Colon,          // :
+    Comma,          // ,
+    Address,        // number prefixed by $ specifying a memory location
+    Keyword,        // assembler directives (.data, etc.)
+    Instruction,    // mnemonics
+    Newline,        // \n
+    
+    OpenBrace,      // {
+    CloseBrace,     // }
+    MacroName,      // <some text>
+    
+    Plus,           // +
+    Minus,          // -
+    Star,           // *
+    Slash,          // /
+    Percent,        // %
+    Bang,           // !
+    Tilde,          // ~
+    OpenParen,      // (
+    CloseParen,     // )
 
-    OpenBrace,  // {
-    CloseBrace, // }
-    MacroName,  // <some text>
-
-    Plus,       // +
-    Minus,      // -
-    Star,       // *
-    Slash,      // /
-    Percent,    // %
-    Bang,       // !
-    Tilde,      // ~
-    OpenParen,  // (
-    CloseParen, // )
-
-    EndOfFile,  // \0
+    EndOfFile,      // \0
+    BeginOfFile,    // 
 };
 
 struct Token{

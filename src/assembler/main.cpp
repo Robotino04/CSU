@@ -2,6 +2,7 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <limits>
 
 #include "Token.hpp"
 
@@ -64,7 +65,6 @@ int main(int argc, const char** argv){
     PositioningPass positioner(inFilename);
     LabelResolutionPass labelResolver(inFilename);
     EvaluationPass evaluator(inFilename);
-    BinaryGenerationPass binaryGenerator(inFilename);
 
     SourceReconstructionPass sourceReconstructor(inFilename);
     std::vector<Token> tokens;
@@ -97,9 +97,9 @@ int main(int argc, const char** argv){
         std::cout << ";" << tokens.size() << " tokens\n";
         sourceReconstructor(tokens);
         std::cout << sourceReconstructor.getSource() << "\n" << std::flush;
-        
-        binaryGenerator(tokens);
 
+        BinaryGenerationPass binaryGenerator(inFilename, binarySize);
+        binaryGenerator(tokens);
         binary = binaryGenerator.getBinary();
 
     #ifdef NDEBUG
@@ -113,7 +113,10 @@ int main(int argc, const char** argv){
     std::cout << "-------------| Binary |-------------\n";
     std::cout << "The binary is " << binary.size() << " bytes large.\n";
     if (binary.size() != binarySize){
-        std::cout << "The estimated size was " << binarySize << "bytes!";
+        std::cout << "The estimated size was " << binarySize << " bytes!\n";
+    }
+    if (binary.size() > std::numeric_limits<uint16_t>().max()){
+        std::cout << "The binary size exceedes the max. amount of addressable memory!\n";
     }
     std::ofstream outfile(outFilename, std::ios::binary);
     if (!outfile.is_open()){
