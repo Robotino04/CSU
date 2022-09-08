@@ -5,30 +5,50 @@
 #include <iostream>
 #include <array>
 
-CSU::CSU(int memorySize){
-    memory.resize(memorySize);
-}
 
 void CSU::step(){
     lastPc = pc;
     std::array<uint16_t, 3> instruction;
     for (int i=0;i<3;i++){
-        auto a = memory[pc++];
-        auto b = memory[pc++];
+        auto a = read(pc++);
+        auto b = read(pc++);
         instruction[i] = toAddress(a, b);
     }
     const auto a_ptr = instruction[0];
     const auto b_ptr = instruction[1];
     const auto c = instruction[2];
 
-    memory[b_ptr] -= memory[a_ptr];
-    if (memory[b_ptr] <= 0)
+    const auto a = read(a_ptr);
+    const auto b = read(b_ptr);
+
+    write(b_ptr, b - a);
+    if (a >= b)
         pc = c;
 }
+
 void CSU::run(){
     while (pc < memory.size()){
         lastPc = pc;
         step();
+        if (pc >= 0x8000) break;
+    }
+}
+
+uint8_t CSU::read(uint16_t address){
+    if (address <= 0x7FFF){
+        return memory[address];
+    }
+    else{
+        std::cout << "[Invalid read from " << address << "]";
+        return 0;
+    }
+}
+void CSU::write(uint16_t address, uint8_t data){
+    if (address <= 0x7FFF){
+        memory[address] = data;
+    }
+    else{
+        std::cout << "[Invalid write to " << address << "]";
     }
 }
 
@@ -51,7 +71,7 @@ void CSU::printState(uint64_t size){
 }
 
 
-void CSU::setMemoryRegion(uint64_t start, std::vector<int8_t> newValues){
+void CSU::setMemoryRegion(uint64_t start, std::vector<uint8_t> newValues){
     if (start + newValues.size() > memory.size())
         throw std::out_of_range("Invalid memory region");
 
