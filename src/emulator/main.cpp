@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
     const char* argv0 = argv[0];
     argv = new const char*[2];
     argv[0] = argv0;
-    argv[1] = "a.out";
+    argv[1] = "../a.out";
     #endif
 
     if (argc < 2){
@@ -43,7 +43,7 @@ int main(int argc, const char** argv) {
         std::cout << "Error opening input file!\n";
         return 1;
     }
-    std::vector<int8_t> binary;
+    std::vector<uint8_t> binary;
     infile.seekg(0, std::ios::end);
     int length = infile.tellg();
     infile.seekg(0, std::ios::beg);
@@ -55,7 +55,7 @@ int main(int argc, const char** argv) {
 
 
 
-    CSU csu(binary.size());
+    CSU csu;
 
     csu.setMemoryRegion(0, binary);
 
