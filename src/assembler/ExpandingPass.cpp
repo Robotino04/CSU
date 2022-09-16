@@ -222,8 +222,8 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
                 removeTokens = false;
             }
             else{
-                // just add the label
-                consume();
+                consumeType(TokenType::Label);
+                if (match(TokenType::Colon)) consumeType(TokenType::Colon);
             }
         }
         
@@ -281,12 +281,30 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
                 popErrorContext();
             }
+            else if (getToken().lexeme == ".asciiz"){
+                pushErrorContext("parsing \".asciiz\" directive");
+                consumeType(TokenType::Keyword);
+                consumeType(TokenType::String);
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+                popErrorContext();
+            }
             else{
                 printError(getToken().sourceInfo, "Unknown keyword " + getToken().lexeme + "!");
             }
         }
+        else if (match(TokenType::Newline)){
+            consumeType(TokenType::Newline);
+        }
+        else if (match(TokenType::BeginOfFile)){
+            consumeType(TokenType::BeginOfFile);
+        }
+        else if (match(TokenType::EndOfFile)){
+            consumeType(TokenType::EndOfFile);
+        }
+
         else{
-            consume();
+            const auto tok = consume();
+            printError(tok.sourceInfo, "Unexpected token " + std::to_string(tok) + "!");
         }
     }
     
