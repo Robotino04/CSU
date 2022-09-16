@@ -67,9 +67,14 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
         
         token.sourceInfo = pos;
         switch (getChar()){
+            case '/':
+                token = {TokenType::Slash, consume()};
+                if (getChar() == '/') token.lexeme += consume();
+                else break;
             case ';':
                 pushErrorContext("parsing comment");
-                token = {TokenType::Comment, consumeUntil('\n')};
+                token.type = TokenType::Comment;
+                token.lexeme += consumeUntil('\n');
                 popErrorContext();
                 break;
             SCT(Colon, ':');
@@ -80,7 +85,6 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
             SCT(Plus, '+');
             SCT(Minus, '-');
             SCT(Star, '*');
-            SCT(Slash, '/');
             SCT(OpenParen, '(');
             SCT(CloseParen, ')');
                 
