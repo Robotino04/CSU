@@ -8,6 +8,7 @@ const inline std::vector<std::string> keywords = {
     ".macro",
     ".address",
     ".org",
+    ".asciiz",
 };
 
 const inline std::vector<std::string> instructions = {

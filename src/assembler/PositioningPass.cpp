@@ -152,6 +152,11 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
                 }
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
+            else if (kwd.lexeme == ".asciiz"){
+                auto str = consumeType(TokenType::String);
+                pos += std::any_cast<std::string>(str.data).size() + 1; // The null termination
+                consumeTypes({TokenType::Newline, TokenType::EndOfFile});
+            }
             else{
                 printError(kwd.sourceInfo, "Unimplemented keyword \"" + kwd.lexeme + "\"!");
             }

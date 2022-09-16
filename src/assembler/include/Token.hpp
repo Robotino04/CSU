@@ -31,6 +31,8 @@ enum class TokenType{
     OpenParen,      // (
     CloseParen,     // )
 
+    String,         // "<anything>"
+
     EndOfFile,      // \0
     BeginOfFile,    // 
 };
@@ -91,7 +93,10 @@ namespace std{
             CASE(OpenParen);
             CASE(CloseParen);
 
+            CASE(String);
+
             CASE(EndOfFile);
+            CASE(BeginOfFile);
             default:
                 return "Unimplemented token nr. " + std::to_string(static_cast<int>(type));
         }
