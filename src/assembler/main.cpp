@@ -30,7 +30,7 @@ int main(int argc, const char** argv){
     const char* argv0 = argv[0];
     argv = new const char*[2];
     argv[0] = argv0;
-    argv[1] = "test.s";
+    argv[1] = "../test.s";
     #endif
 
     std::string outFilename = "a.out";
@@ -89,6 +89,10 @@ int main(int argc, const char** argv){
         positioner(tokens);
         labelResolver(tokens);
         evaluator(tokens);
+        std::cout << "-------------| Final Tokens |-------------\n";
+        for (auto const& tok : tokens){
+            std::cout << std::to_string(tok) << "\n";
+        }
 
         binarySize = positioner.getBinarySize();
 

@@ -19,10 +19,20 @@ The custom assembler for the CSU is divided into six stages:
 
 ## Memory Layout
 
-| $0x0000 - $0x7FFF |
-| ----------------- |
-| Program memory    |
+| $0x0000 - $0x7FFF | $0x8000  | $0x8001 |
+| ----------------- | -------- | ------- |
+| Program memory    | Char Out | Char In |
 
+## IO
+Reading from **Char In** will give the char code of the oldest character in a buffer. If the buffer is empty, NULL is read or it is waited until there is a character.
+
+Writing to **Char In** will do nothing.
+
+Writing to **Char Out** will write character to the output.
+
+Reading from **Char Out** will yield zero.
+
+In the emulator **Char In** and **Char Out** are links to stdin and stdout respectively.
 
 ## Resources
 - [https://en.wikipedia.org/wiki/One-instruction_set_computer#Subtract_and_branch_if_less_than_or_equal_to_zero]()

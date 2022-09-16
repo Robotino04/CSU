@@ -48,8 +48,7 @@ Token& PositioningPass::consumeTypes(std::vector<TokenType> types){
 bool PositioningPass::match(std::vector<TokenType> types) const{
     return std::find(types.begin(), types.end(), getToken().type) != types.end();
 }
-std::vector<Token> PositioningPass::consumeExpression(bool shouldBeAddress){
-    bool hasAddress = false;
+std::vector<Token> PositioningPass::consumeExpression(){
     std::vector<Token> expr;
     do{
         expr.push_back(consumeTypes({
@@ -66,7 +65,6 @@ std::vector<Token> PositioningPass::consumeExpression(bool shouldBeAddress){
             TokenType::OpenParen,
             TokenType::CloseParen,
         }));
-        hasAddress |= (expr.back().type == TokenType::Address || expr.back().type == TokenType::Label);
     }
     while (match({
         TokenType::Number,
@@ -82,12 +80,6 @@ std::vector<Token> PositioningPass::consumeExpression(bool shouldBeAddress){
         TokenType::OpenParen,
         TokenType::CloseParen,
     }));
-    if (shouldBeAddress && !hasAddress){
-        printError(getToken().sourceInfo, "Expected expression resulting in an address");
-    }
-    else if (!shouldBeAddress && hasAddress){
-        printError(getToken().sourceInfo, "Expected expression resulting in a number");
-    }
     return expr;
 }
 
@@ -101,13 +93,13 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning instruction " + getToken().lexeme);
             auto& instr = consumeType(TokenType::Instruction);
             if (instr.lexeme == "subleq"){
-                consumeExpression(true);
+                consumeExpression();
                 pos+=2;
                 consumeType(TokenType::Comma);
-                consumeExpression(true);
+                consumeExpression();
                 pos+=2;
                 consumeType(TokenType::Comma);
-                consumeExpression(true);
+                consumeExpression();
                 pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
@@ -120,17 +112,17 @@ std::vector<Token>& PositioningPass::operator() (std::vector<Token>& tokens){
             pushErrorContext("positioning keyword " + getToken().lexeme);
             auto& kwd = consumeType(TokenType::Keyword);
             if (kwd.lexeme == ".data"){
-                consumeExpression(false);
+                consumeExpression();
                 pos++;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else if (kwd.lexeme == ".address"){
-                consumeExpression(true);
+                consumeExpression();
                 pos+=2;
                 consumeTypes({TokenType::Newline, TokenType::EndOfFile});
             }
             else if (kwd.lexeme == ".org"){
-                auto tmp = consumeExpression(true);
+                auto tmp = consumeExpression();
                 // construct a parsable token sequence
                 std::vector<Token> expr;
                 expr.reserve(tmp.size()+2);
