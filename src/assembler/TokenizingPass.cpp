@@ -32,7 +32,7 @@ char TokenizingPass::getChar() const{
     return source[charIdx];
 }
 bool TokenizingPass::matches(const char chr) const{
-    return source[charIdx] == chr;
+    return getChar() == chr;
 }
 char TokenizingPass::consume(){
     pos.column++;
@@ -158,6 +158,55 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
                     token.type = TokenType::Number;
                     token.data = static_cast<int8_t>(std::any_cast<int64_t>(token.data));
                 }
+                popErrorContext();
+                break;
+            }
+            case '"':{
+                pushErrorContext("parsing string");
+                token.lexeme = consume();
+                token.type = TokenType::String;
+
+                bool escaping = false;
+                std::string actualString = "";
+                while (!matches('"') && !isDone()){
+                    if (escaping){
+                        // escape characters from https://en.wikipedia.org/wiki/Escape_sequences_in_C
+                        switch (getChar()){
+                            case 'a': actualString += '\a'; break;
+                            case 'b': actualString += '\b'; break;
+                            case 'e': actualString += '\e'; break;
+                            case 'f': actualString += '\f'; break;
+                            case 'n': actualString += '\n'; break;
+                            case 't': actualString += '\t'; break;
+                            case 'v': actualString += '\v'; break;
+                            case 'r': actualString += '\r'; break;
+                            case '\\': actualString += '\\'; break;
+                            case '\'': actualString += '\''; break;
+                            case '"': actualString += '"'; break;
+                            case '?': actualString += '?'; break;
+
+                            default:
+                                printError(pos, std::string("Unexpectdly escaped character '") + getChar() + "'!");
+                                break;
+                        }
+                        token.lexeme += consume();
+                    }
+                    else if (matches('\\')){
+                        escaping = true;
+                        token.lexeme += consume();
+                    }
+                    else{
+                        const char c = consume();
+                        actualString += c;
+                        token.lexeme += c;
+                    }
+                }
+                
+                if (!matches('"'))
+                    printError(pos, "Expected '\"' after string, but hit end of file!");
+                token.lexeme += consume();
+
+                token.data = actualString;
                 popErrorContext();
                 break;
             }

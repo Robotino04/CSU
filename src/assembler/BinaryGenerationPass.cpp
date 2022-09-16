@@ -37,6 +37,13 @@ std::vector<Token>& BinaryGenerationPass::operator() (std::vector<Token>& tokens
                     binaryPos = std::any_cast<uint16_t>(address.data);
                 }
             }
+            else if (tok.type == TokenType::String){
+                for (char c : std::any_cast<std::string>(tok.data)){
+                    binary.at(binaryPos++) = c;
+                }
+                // null termination
+                binary.at(binaryPos++) = '\0';
+            }
         }
     }
     catch(std::out_of_range){
