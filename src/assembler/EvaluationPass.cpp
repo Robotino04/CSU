@@ -93,6 +93,37 @@ std::vector<Token>& EvaluationPass::operator() (std::vector<Token>& tokens){
             removeTokens = true;
             addGeneratedToken(parseExpression());
             removeTokens = false;
+
+            // convert to the correct types 
+            if ((*std::prev(tokensIt, 2)).type == TokenType::Keyword){
+                if ((*std::prev(tokensIt, 2)).lexeme == ".data"){
+                    if ((*std::prev(tokensIt)).type == TokenType::Address){
+                        (*std::prev(tokensIt)).type = TokenType::Number;
+                        (*std::prev(tokensIt)).data = static_cast<int8_t>(
+                                std::any_cast<uint16_t>(
+                                    (*std::prev(tokensIt)).data
+                                ));
+                    }
+                }
+                else if ((*std::prev(tokensIt, 2)).lexeme == ".address"){
+                    if ((*std::prev(tokensIt)).type == TokenType::Number){
+                        (*std::prev(tokensIt)).type = TokenType::Address;
+                        (*std::prev(tokensIt)).data = static_cast<uint16_t>(
+                                std::any_cast<int8_t>(
+                                    (*std::prev(tokensIt)).data
+                                ));
+                    }
+                }
+                else if ((*std::prev(tokensIt, 2)).lexeme == ".org"){
+                    if ((*std::prev(tokensIt)).type == TokenType::Number){
+                        (*std::prev(tokensIt)).type = TokenType::Address;
+                        (*std::prev(tokensIt)).data = static_cast<uint16_t>(
+                                std::any_cast<int8_t>(
+                                    (*std::prev(tokensIt)).data
+                                ));
+                    }
+                }
+            }
         }
         else{
             consume();

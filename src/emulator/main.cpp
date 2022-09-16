@@ -16,7 +16,7 @@ int main(int argc, const char** argv) {
     const char* argv0 = argv[0];
     argv = new const char*[2];
     argv[0] = argv0;
-    argv[1] = "../a.out";
+    argv[1] = "a.out";
     #endif
 
     if (argc < 2){

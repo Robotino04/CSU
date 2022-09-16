@@ -1,48 +1,49 @@
-; data(b) -= data(a)
+// data(b) -= data(a)
 .macro sub a, b{
     subleq a, b
 }
 
-; data(b) += data(a)
+// data(b) += data(a)
 .macro add a, b{
     sub a, zero
     sub zero, b
     sub zero, zero
 }
 
-; pc = a
+// pc = a
 .macro jmp a{
     subleq zero, zero, a
 }
 
 
-; if (data(x) <= 0) pc = a
+// if (data(x) <= 0) pc = a
 .macro jmpnp x, a{
     subleq zero, x, a
 }
 
-; if (data(x) > 0) pc = a
+// if (data(x) > 0) pc = a
 .macro jmpp x, address{
     jmpnp x, end
     jmp address
     end:
 }
 
-; data(b) = data(a)
+// data(b) = data(a)
 .macro mov a, b{
     sub b, b
     add a, b
 }
 
-; data(x) = 0
+// data(x) = 0
 .macro clear x{
     sub x, x
 }
+// stops execution
 .macro halt{
     jmp $0x8000
 }
 
-; pc = data(c)
+// pc = data(c)
 .macro jmpi x{
     mov x, next_instruction + 4
     mov x+1, next_instruction + 5
@@ -50,7 +51,7 @@
     subleq zero, zero, $0x0000
 }
 
-; data(b) *= data(a)
+// data(b) *= data(a)
 .macro mul a, b{
     mov b, tmp1
     clear tmp2
@@ -64,26 +65,38 @@
     mov tmp2, b
 }
 
-; data(a + data(b)) = data(c)
-.macro movo a, b, c{
-    address:
-        .data a
-    mov address, next_instruction
-    add b, next_instruction
+// data(result) += data(address + data(offset))
+.macro addo address, offset, result{
+    jmp over_address_label
+    address_label:
+        .address address
+    
+    over_address_label:
+    mov address_label, final_address
+    mov address_label+1, final_address+1
+    add offset, final_address
+
 
     // add
-    clear c
-    next_instruction:
-    subleq a, zero
-    sub zero, b
+    final_address:
+    sub $0x0000, zero
+    sub zero, result
     clear zero
 }
 
-mul value_1, value_2
-mul value_2, value_3
+mov zero, i
+mov message_len, tmp1
+print_loop:
+    mov tmp1, message_len
+    addo message, i, $0x8000
+
+    add one, i
+    mov message_len, tmp1
+
+    sub i, message_len
+    jmpp message_len, print_loop
 
 halt
-
 
 
 value_1:
@@ -93,7 +106,7 @@ value_2:
 value_3:
     .data 3
 
-; temporary variables used by mul
+// temporary variables used by mul
 tmp1:
     .data 0
 tmp2:
@@ -104,8 +117,10 @@ zero:
 one:
     .data 1
 
-exit_address:
-    .address $0x8000
+i:
+    .data 0
 
-.org $41 + $69 * 100
-.data 0x69
+message:
+    .asciiz "Hello, World!\n"
+message_len:
+    .data message_len - message

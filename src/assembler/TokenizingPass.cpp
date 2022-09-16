@@ -55,7 +55,7 @@ static bool charInRange(char chr, char start, char end){
 }
 
 // defines a Single Character Token
-#define SCT(TYPE, CHR) case CHR: token = {TokenType::TYPE, consume()}; break
+#define SCT(TYPE, CHR) case CHR: token.type = TokenType::TYPE; token.lexeme = consume(); break
 
 std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
     pos = {1, 0, filename};
@@ -68,7 +68,8 @@ std::vector<Token>& TokenizingPass::operator() (std::vector<Token>& tokens){
         token.sourceInfo = pos;
         switch (getChar()){
             case '/':
-                token = {TokenType::Slash, consume()};
+                token.type = TokenType::Slash;
+                token.lexeme = consume();
                 if (getChar() == '/') token.lexeme += consume();
                 else break;
             case ';':

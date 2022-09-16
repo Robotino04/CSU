@@ -38,7 +38,8 @@ Token ExpandingPass::consume(){
         tokensIt = tokens->erase(tokensIt);
     }
     else{
-        tokensIt++;
+        if (tokensIt != tokens->end())
+            std::advance(tokensIt, 1);
     }
     return token;
 }
@@ -291,6 +292,9 @@ std::vector<Token>& ExpandingPass::operator() (std::vector<Token>& tokens){
             else{
                 printError(getToken().sourceInfo, "Unknown keyword " + getToken().lexeme + "!");
             }
+        }
+        else if (match(TokenType::Comment)){
+            consumeType(TokenType::Comment);
         }
         else if (match(TokenType::Newline)){
             consumeType(TokenType::Newline);

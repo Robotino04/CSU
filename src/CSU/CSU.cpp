@@ -10,8 +10,8 @@ void CSU::step(){
     lastPc = pc;
     std::array<uint16_t, 3> instruction;
     for (int i=0;i<3;i++){
-        auto a = read(pc++);
-        auto b = read(pc++);
+        const auto a = read(pc++);
+        const auto b = read(pc++);
         instruction[i] = toAddress(a, b);
     }
     const auto a_ptr = instruction[0];
@@ -38,6 +38,12 @@ uint8_t CSU::read(uint16_t address){
     if (address <= 0x7FFF){
         return memory[address];
     }
+    else if (address == 0x8000){
+        return 0;
+    }
+    else if (address == 0x8001){
+        return std::cin.get();
+    }
     else{
         std::cout << "[Invalid read from " << address << "]";
         return 0;
@@ -47,6 +53,10 @@ void CSU::write(uint16_t address, uint8_t data){
     if (address <= 0x7FFF){
         memory[address] = data;
     }
+    else if (address == 0x8000){
+        std::cout << static_cast<char>(data);
+    }
+    else if (address == 0x8001);
     else{
         std::cout << "[Invalid write to " << address << "]";
     }
