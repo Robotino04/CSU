@@ -90,6 +90,7 @@ namespace std{
             CASE(Star);
             CASE(Slash);
             CASE(Percent);
+            CASE(Bang);
             CASE(OpenParen);
             CASE(CloseParen);
 
