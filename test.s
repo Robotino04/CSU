@@ -65,30 +65,60 @@
     mov tmp2, b
 }
 
-// data(result) += data(address + data(offset))
-.macro addo address, offset, result{
+// data(result + data(result_offset)) += data(address + data(offset))
+.macro addo address, offset, result, result_offset{
     jmp over_address_label
     address_label:
         .address address
+    result_label:
+        .address result
     
     over_address_label:
+    // calculate source address
     mov address_label, final_address
-    mov address_label+1, final_address+1
+    mov address_label+1, final_address + 1
     add offset, final_address
+
+    // calculate result address
+    mov result_label, final_result+2
+    mov result_label+1, final_result+2 + 1
+    add result_offset, final_result+2
 
 
     // add
     final_address:
     sub $0x0000, zero
-    sub zero, result
+    final_result:
+    sub zero, $0x0000
     clear zero
 }
+
+mov message_len, i
+sub two, i
+read_loop:
+    add one, i
+    addo $0x8001, zero, message, i
+    
+    clear tmp2
+    addo message, i, tmp2, zero
+    sub newline, tmp2
+    jmpp tmp2, read_loop
+    add one, tmp2
+    jmpnp i, read_loop
+
+
+// insert newline
+add one, i
+addo newline, zero, message, i
+
+
+mov i, message_len
 
 mov zero, i
 mov message_len, tmp1
 print_loop:
     mov tmp1, message_len
-    addo message, i, $0x8000
+    addo message, i, $0x8000, zero
 
     add one, i
     mov message_len, tmp1
@@ -111,16 +141,25 @@ tmp1:
     .data 0
 tmp2:
     .data 0
+i:
+    .data 0
+
 
 zero:
     .data 0
 one:
     .data 1
+two:
+    .data 2
+newline:
+    .data 10
 
-i:
-    .data 0
+
+
+message_len:
+    .data message_end - message
 
 message:
-    .asciiz "Hello, World!\n"
-message_len:
-    .data message_len - message
+    .asciiz "Hello "
+message_end:
+
